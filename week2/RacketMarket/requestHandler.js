@@ -13,7 +13,7 @@ function main(response) {
 
     response.writeHead(200, {'Content-Type' : 'text/html'});
     response.write(main_view);
-    response.end();    
+    response.end();
 }
 
 function redRacket(response) {
