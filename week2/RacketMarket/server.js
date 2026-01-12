@@ -4,7 +4,9 @@ const url = require('url');
 function start(route, handle) {
     function onRequest(request, response) {
         let pathname = url.parse(request.url).pathname;
-        route(pathname, handle, request, response);
+        let queryData = url.parse(request.url, true).query;
+        let productId = queryData.productId;
+        route(pathname, handle, response, productId);
     }
     http.createServer(onRequest).listen(3000);
 }

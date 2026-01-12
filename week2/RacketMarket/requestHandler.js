@@ -1,5 +1,5 @@
 const fs = require('fs');
-const main_view = fs.readFileSync('./main.html');
+const main_view = fs.readFileSync('./main.html', 'utf-8');
 const orderlist_view = fs.readFileSync('./orderlist.html');
 
 const mariadb = require('./database/connect/mariadb');
@@ -7,7 +7,7 @@ const mariadb = require('./database/connect/mariadb');
 function main(response) {
     console.log('main');
 
-    mariadb.query("SELECT * FROM product", function(err, rows) {
+    mariadb.query("SELECT * FROM products", function(err, rows) {
         console.log(rows);
     })
 
@@ -42,8 +42,7 @@ function blackRacket(response) {
 
 function order(response, productId) {
     response.writeHead(200, {'Content-Type' : 'text/html'});
-
-    mariadb.query("INSERT INTO orderlist VALUES (" + productId + ", '" + new Date().toLocaleDateString() + "');", function(err, rows) {
+    mariadb.query("INSERT INTO orderlists VALUES (" + productId + ", '" + new Date().toLocaleDateString() + "');", function(err, rows) {
         console.log(rows);
     })
 
@@ -56,7 +55,7 @@ function orderlist(response) {
 
     response.writeHead(200, {'Content-Type' : 'text/html'});
 
-    mariadb.query("SELECT * FROM orderlist", function(err, rows) {
+    mariadb.query("SELECT * FROM orderlists", function(err, rows) {
         response.write(orderlist_view);
 
         rows.forEach(element => {
