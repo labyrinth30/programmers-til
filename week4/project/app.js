@@ -11,7 +11,21 @@ var id = 1;
 // 로그인
 app.post('/login', (req,res) => {
     const { email, password } = req.body;
-    res.json()
+
+    // email로 db에 있는 유저 조회하기
+    let user;
+    // 배열 생성 없이 하나씩 꺼내서 검사
+    for ( const u of db.values()) {
+        if (u.email === email) {
+            user = u;
+            // 찾으면 중단
+            break;
+        }
+    }
+    if (!user) return res.status(401).json({ "message": "Invalid Email" });
+    // password도 맞는지 비교
+    if (user.password !== password) return res.status(401).json({"message": "Invalid Password"});
+    res.json(user);
 });
 
 // 회원가입
@@ -50,3 +64,50 @@ app.delete('/users/:id', (req,res) => {
 app.get('/users', (req,res) => {
     res.json(Array.from(db.values()));
 })
+
+// '/channels'
+app
+    .route('/channels')
+    .get((req, res) => {
+        const channels = Array.from(db.values());
+        res.json(channels);
+    })
+    .post((req, res) => {
+    db.set(id++, req.body);
+    if (!req.body.channelTitle) return res.status(400).json({ "message": "Channel Title is required"});
+    res.status(201).send({
+        "message": `${req.body.channelTitle} 채널이 생성되었습니다.`
+    });
+
+})
+
+// 'channels/:id'
+app
+    .route('/channels/:id')
+    .get((req, res) => {
+        const id = parseInt(req.params.id);
+        const channel = db.get(id);
+        if (!channel) return res.status(404).json({ "message": `${id} Channel Not Found`});
+        res.json(channel);
+    })
+    .patch((req, res) => {
+        const id = parseInt(req.params.id);
+        let channel = db.get(id);
+        if (!channel) return res.status(404).json({"message": `${id} Channel Not Found`});
+        const oldChannelTitle = channel.channelTitle;
+        const newChannel = {
+            ...channel,
+            ...req.body
+        };
+        db.set(id, newChannel);
+        res.json({
+            "message": `${oldChannelTitle}이 ${newChannel.channelTitle}로 변경되었습니다.`,
+        })
+    })
+    .delete((req, res) => {
+        const id = parseInt(req.params.id);
+        const channel = db.get(id);
+        if (!channel) return res.status(404).json({ "message": `${id} Channel Not Found`});
+        db.delete(id);
+        res.status(204).end();
+    })
