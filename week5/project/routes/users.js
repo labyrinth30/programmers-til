@@ -1,77 +1,132 @@
-import express from 'express';
+import express from "express";
 const router = express.Router();
 router.use(express.json());
-import conn from '../db.js';
+import conn from "../db.js";
+import { body, validationResult } from "express-validator";
 
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        let sql =
-            `SELECT * FROM users WHERE email = ? AND password = ?`
-        const [results] = await conn.query(sql,
-            [email, password]
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      message: errors.array()[0].msg,
+    });
+  }
+  next();
+};
+
+router.post(
+  "/login",
+  [
+    body("email").notEmpty().isEmail().withMessage("email 형식이 아닙니다."),
+    body("password")
+      .notEmpty()
+      .isString()
+      .withMessage("password must be a string"),
+    validate,
+  ],
+  (req, res) => {
+    const { email, password } = req.body;
+
+    let sql = `SELECT * FROM users where email= ?`;
+    conn.query(sql, email, (err, results) => {
+      if (err) {
+        return res.status(400).json(err);
+      }
+      let user = results[0];
+      if (user && user.password === password) {
+        // 토큰 발급
+        const token = jwt.sign(
+          {
+            email: user.email,
+            name: user.name,
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "1d",
+            issuer: "my-app",
+          },
         );
+        return res
+          .cookie("token", token, {
+            httpOnly: true,
+          })
+          .end();
+      } else {
+        return res.status(401).json({ message: "Login Failed" });
+      }
+    });
+  },
+);
 
-        if (results.length > 0) {
-            // 응답으로 보낼 유저 객체
-            const user = results[0];
-            res.json(user);
-        } else {
-            res.status(400).json({ "message": "이메일 또는 비밀번호가 틀렸습니다." });
-        }
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ "message": "서버 오류가 발생했습니다." });
-    }
-});
-
-router.post('/register', (req,res) => {
+router.post(
+  "/register",
+  [
+    body("email").notEmpty().isEmail().withMessage("email 형식이 아닙니다."),
+    body("password")
+      .notEmpty()
+      .isString()
+      .withMessage("password must be a string"),
+    body("nickname")
+      .notEmpty()
+      .isString()
+      .withMessage("nickname must be a string"),
+    body("contact")
+      .notEmpty()
+      .isString()
+      .withMessage("contact must be a string"),
+    validate,
+  ],
+  (req, res) => {
     const { email, password, nickname, contact } = req.body;
-    // validation
-    if (!email || !password || !nickname || !contact) return res.status(400).send("모든 필드를 입력해주세요.");
-    let sql =  `INSERT INTO users (email, password, name, contact) VALUES (?, ?, ?, ?)`
-    conn.query(sql,
-        [email, password, nickname, contact],
-        (err, results, fields) => {
-            if (err) return res.status(500).json(err);
-            res.json(results);
-        }
-    )
-});
+    const sql = `INSERT INTO users (email, password, name, contact) VALUES (?, ?, ?, ?)`;
+    const values = [email, password, nickname, contact];
+    conn.query(sql, values, (err, results, fields) => {
+      if (err) return res.status(500).json(err);
+      res.json(results);
+    });
+  },
+);
 
-router.get('/users/:email', (req,res) => {
-    const email = req.params.email;
-    let sql =`SELECT * FROM users where email= ?`
-        conn.query(sql,
-        email,
-        (err, results, fields) => {
-            if (err) return res.status(500).json(err);
-            res.json(results);
+router
+  .route("/users")
+  .get(
+    [
+      body("email").notEmpty().isEmail().withMessage("email 형식이 아닙니다."),
+      validate,
+    ],
+    (req, res) => {
+      const { email } = req.body;
+      let sql = `SELECT * FROM users where email= ?`;
+      conn.query(sql, email, (err, results, fields) => {
+        if (err) {
+          return res.status(500).json(err);
         }
-    )
-});
-
-router.delete('/users/:email', (req,res) => {
-    const email = req.params.email;
-    let sql = `DELETE FROM users WHERE email = ?`
-    conn.query(
-        sql, email,
-        (err, results) => {
-            if (err) return res.status(500).json(err);
-            res.json(results);
+        return res.json(results);
+      });
+    },
+  )
+  .delete(
+    [
+      body("email").notEmpty().isEmail().withMessage("email 형식이 아닙니다."),
+      validate,
+    ],
+    (req, res) => {
+      const { email } = req.body;
+      let sql = `DELETE FROM users WHERE email = ?`;
+      conn.query(sql, email, (err, results) => {
+        if (err) {
+          return res.status(500).json(err);
         }
-    )
-});
-
-router.get('/users', (req,res) => {
-    let sql =`SELECT * FROM users`
-    conn.query(
-        sql,
-        (err, results) => {
-            res.json(results);
+        if (results.affectedRows === 0) {
+          return res.status(404).json({ message: "User Not Found" });
         }
-    )
-})
+        return res.status(204).end();
+      });
+    },
+  );
 
 export default router;
