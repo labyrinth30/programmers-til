@@ -5,6 +5,7 @@ import booksRouter from './routes/books.js';
 import cartsRouter from './routes/carts.js';
 import ordersRouter from './routes/orders.js';
 import likesRouter from './routes/likes.js';
+import categoryRouter from "./routes/category.js";
 
 dotenv.config()
 const app = express();
@@ -21,3 +22,4 @@ app.use('/likes', likesRouter);
 app.use('/books', booksRouter);
 app.use('/carts', cartsRouter);
 app.use('/orders', ordersRouter);
+app.use('/category', categoryRouter)
