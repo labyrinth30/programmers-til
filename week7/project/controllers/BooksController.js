@@ -3,7 +3,10 @@ import {StatusCodes} from "http-status-codes";
 
 export const findBooks = (req, res) => {
     const { categoryId, isNew, limit, currentPage } = req.query;
-    let sql = 'SELECT * FROM books';
+    let sql =
+        'SELECT *, ' +
+        '(SELECT count(*) FROM likes WHERE books.id=liked_book_id) AS likes ' +
+        'FROM books';
     const offset = limit * (currentPage - 1);
     let values = [];
     if (categoryId && isNew) {
@@ -27,9 +30,17 @@ export const findBooks = (req, res) => {
 };
 
 export const findBookById = (req, res) => {
-    const { id } = req.params;
-    const sql = 'SELECT * FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id = ?';
-    db.query(sql, id, (err, results) => {
+    const { user_id } = req.body;
+    const book_id = req.params.id;
+    const sql = `SELECT *,
+        (SELECT COUNT(*) FROM likes WHERE liked_book_id = books.id) AS likes,
+        (SELECT EXISTS(SELECT * FROM likes WHERE user_id = ? AND liked_book_id=?)) AS liked
+        FROM books
+        LEFT JOIN category
+        ON books.category_id = category.category_id
+        WHERE books.id = ?;`
+    const values = [user_id, book_id, book_id];
+    db.query(sql, values, (err, results) => {
         if (err) return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: err.message});
         if (results.length === 0) return res.status(StatusCodes.NOT_FOUND).end();
         return res.status(StatusCodes.OK).json(results[0]);
