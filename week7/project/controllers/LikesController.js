@@ -5,7 +5,7 @@ import statusCode from 'http-status-codes';
 export const addLike = (req, res) => {
     const id = req.params.id;
     const { user_id } = req.body;
-    const sql = `INSERT INTO likes (user_id, liked_book_id)
+    const sql = `INSERT INTO likes (user_id, book_id)
     VALUES (?, ?)`;
     const values = [user_id, id];
     conn.query(sql, values, (err, results) => {
@@ -17,7 +17,7 @@ export const addLike = (req, res) => {
 export const deleteLike = (req, res) => {
     const id = req.params.id;
     const { user_id } = req.body;
-    const sql = `DELETE FROM likes WHERE user_id = ? AND liked_book_id = ?`;
+    const sql = `DELETE FROM likes WHERE user_id = ? AND book_id = ?`;
     const values = [user_id, id];
     conn.query(sql, values, (err, results) => {
         if (err) return res.status(statusCode.INTERNAL_SERVER_ERROR).json({message: err.message});

@@ -5,7 +5,7 @@ export const findBooks = (req, res) => {
     const { categoryId, isNew, limit, currentPage } = req.query;
     let sql =
         'SELECT *, ' +
-        '(SELECT count(*) FROM likes WHERE books.id=liked_book_id) AS likes ' +
+        '(SELECT count(*) FROM likes WHERE books.id=book_id) AS likes ' +
         'FROM books';
     const offset = limit * (currentPage - 1);
     let values = [];
@@ -33,8 +33,8 @@ export const findBookById = (req, res) => {
     const { user_id } = req.body;
     const book_id = req.params.id;
     const sql = `SELECT *,
-        (SELECT COUNT(*) FROM likes WHERE liked_book_id = books.id) AS likes,
-        (SELECT EXISTS(SELECT * FROM likes WHERE user_id = ? AND liked_book_id=?)) AS liked
+        (SELECT COUNT(*) FROM likes WHERE book_id = books.id) AS likes,
+        (SELECT EXISTS(SELECT * FROM likes WHERE user_id = ? AND book_id=?)) AS liked
         FROM books
         LEFT JOIN category
         ON books.category_id = category.category_id
