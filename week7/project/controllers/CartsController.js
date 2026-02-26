@@ -37,8 +37,3 @@ export const removeCartItem = (req, res) => {
         return res.status(statusCode.OK).json(results);
     });
 }
-
-// 선택한 장바구니 상품 목록 조회
-export const getOrderItems = (req, res) => {
-
-}
