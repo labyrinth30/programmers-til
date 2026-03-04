@@ -1,12 +1,27 @@
 import conn from '../db.js';
 import statusCode from 'http-status-codes';
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // 장바구니 담기
 export const addToCart = (req, res) => {
-    const { book_id, quantity,user_id } = req.body;
+    const { book_id, quantity } = req.body;
+    const authorization = ensureAuthorization(req, res);
+    if ( authorization instanceof jwt.TokenExpiredError ) {
+        return res.status(statusCode.UNAUTHORIZED).json({
+            message: "토큰이 만료되었습니다."
+        })
+    }
+    if ( authorization instanceof jwt.JsonWebTokenError ) {
+        return res.status(statusCode.UNAUTHORIZED).json({
+            message: "잘못된 토큰입니다."
+        })
+    }
     const sql = `INSERT INTO cartItems (book_id, quantity, user_id)
     VALUES (?, ?, ?)`;
-    const values = [book_id, quantity, user_id];
+    const values = [book_id, quantity, authorization.id];
     conn.query(sql, values, (err, results) => {
         if (err) return res.status(statusCode.INTERNAL_SERVER_ERROR).json({message: err.message});
         return res.status(statusCode.CREATED).json(results);
@@ -15,14 +30,25 @@ export const addToCart = (req, res) => {
 
 // 장바구니 아이템 목록 조회
 export const getCartItems = (req, res) => {
-    const { user_id, selected } = req.body;
+    const { selected } = req.body;
+    const authorization = ensureAuthorization(req, res);
+    if ( authorization instanceof TokenExpiredError ) {
+        return res.status(statusCode.UNAUTHORIZED).json({
+            message: "토큰이 만료되었습니다."
+        })
+    }
+    if ( authorization instanceof JsonWebTokenError ) {
+        return res.status(statusCode.UNAUTHORIZED).json({
+            message: "잘못된 토큰입니다."
+        })
+    }
     const sql =
         `SELECT cartItems.id, book_id, title, summary, quantity, price
         FROM cartItems LEFT JOIN books
         ON cartItems.book_id = books.id
         WHERE user_id = ?
         AND cartItems.id IN (?)`
-    conn.query(sql, [user_id, selected], (err, results) => {
+    conn.query(sql, [authorization.id, selected], (err, results) => {
         if (err) return res.status(statusCode.INTERNAL_SERVER_ERROR).json({message: err.message});
         return res.status(statusCode.OK).json(results);
     });
@@ -37,3 +63,13 @@ export const removeCartItem = (req, res) => {
         return res.status(statusCode.OK).json(results);
     });
 }
+
+export const ensureAuthorization = (req, res) => {
+    try {
+        const receivedJwt = req.headers["authorization"];
+        const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_SECRET);
+        return decodedJwt;
+    } catch (err) {
+        return err;
+    }
+};
