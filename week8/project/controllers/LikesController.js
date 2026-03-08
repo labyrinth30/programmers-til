@@ -1,7 +1,7 @@
 import conn from '../db.js';
 import statusCode from 'http-status-codes';
 import jwt from "jsonwebtoken";
-
+import {ensureAuthorization} from "../auth.js";
 
 export const addLike = (req, res) => {
     const book_id = req.params.id;
@@ -25,8 +25,7 @@ export const addLike = (req, res) => {
     });
 };
 
-export const deleteLike = (req, res) => {
-    const book_id = req.params.id;
+export const deleteLike = (req, res) => {const book_id = req.params.id;
     const authorization = ensureAuthorization(req, res);
     if ( authorization instanceof jwt.TokenExpiredError ) {
         return res.status(statusCode.UNAUTHORIZED).json({
@@ -45,13 +44,3 @@ export const deleteLike = (req, res) => {
         return res.status(statusCode.CREATED).json(results);
     });
 }
-
-export const ensureAuthorization = (req, res) => {
-    try {
-        const receivedJwt = req.headers["authorization"];
-        const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_SECRET);
-        return decodedJwt;
-    } catch (err) {
-        return err;
-    }
-};

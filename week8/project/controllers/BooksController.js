@@ -2,9 +2,10 @@ import db from "../db.js";
 import {StatusCodes} from "http-status-codes";
 
 export const findBooks = (req, res) => {
+    const allBooks = {};
     const { categoryId, isNew, limit, currentPage } = req.query;
     let sql =
-        'SELECT *, ' +
+        'SELECT SQL_CALC_FOUND_ROWS *, ' +
         '(SELECT count(*) FROM likes WHERE books.id=book_id) AS likes ' +
         'FROM books';
     const offset = limit * (currentPage - 1);
@@ -24,8 +25,19 @@ export const findBooks = (req, res) => {
     values.push(parseInt(limit || 3), offset);
 
     db.query(sql, values, (err, results) => {
+        if (err) return res.status(StatusCodes.NOT_FOUND).json({message: err.message});
+        return allBooks.books = results;
+    });
+
+    sql = 'SELECT found_rows()';
+    db.query(sql, (err, results) => {
         if (err) return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: err.message});
-        return res.status(StatusCodes.OK).json(results);
+        const totalCount = results[0]["found_rows()"];
+        const pagination = {};
+        pagination.totalCount = totalCount;
+        pagination.currentPage = currentPage;
+        allBooks.pagination = pagination;
+        return res.status(StatusCodes.OK).json(allBooks);
     });
 };
 

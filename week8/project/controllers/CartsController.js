@@ -2,6 +2,7 @@ import conn from '../db.js';
 import statusCode from 'http-status-codes';
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import {ensureAuthorization} from "../auth.js";
 
 dotenv.config();
 
@@ -30,25 +31,30 @@ export const addToCart = (req, res) => {
 
 // 장바구니 아이템 목록 조회
 export const getCartItems = (req, res) => {
-    const { selected } = req.body;
+    const { selected } = req.body || {};
     const authorization = ensureAuthorization(req, res);
-    if ( authorization instanceof TokenExpiredError ) {
+    if ( authorization instanceof jwt.TokenExpiredError ) {
         return res.status(statusCode.UNAUTHORIZED).json({
             message: "토큰이 만료되었습니다."
         })
     }
-    if ( authorization instanceof JsonWebTokenError ) {
+    if ( authorization instanceof jwt.JsonWebTokenError ) {
         return res.status(statusCode.UNAUTHORIZED).json({
             message: "잘못된 토큰입니다."
         })
     }
-    const sql =
+    let sql =
         `SELECT cartItems.id, book_id, title, summary, quantity, price
         FROM cartItems LEFT JOIN books
         ON cartItems.book_id = books.id
-        WHERE user_id = ?
-        AND cartItems.id IN (?)`
-    conn.query(sql, [authorization.id, selected], (err, results) => {
+        WHERE user_id = ?`
+    let values = [authorization.id];
+    if (selected) { // 주문서 작성시 선택한 장바구니 목록 조회
+        sql += ` AND cartItems.id IN (?)`;
+        values.push(selected);
+    }
+
+    conn.query(sql, values, (err, results) => {
         if (err) return res.status(statusCode.INTERNAL_SERVER_ERROR).json({message: err.message});
         return res.status(statusCode.OK).json(results);
     });
@@ -63,13 +69,3 @@ export const removeCartItem = (req, res) => {
         return res.status(statusCode.OK).json(results);
     });
 }
-
-export const ensureAuthorization = (req, res) => {
-    try {
-        const receivedJwt = req.headers["authorization"];
-        const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_SECRET);
-        return decodedJwt;
-    } catch (err) {
-        return err;
-    }
-};
