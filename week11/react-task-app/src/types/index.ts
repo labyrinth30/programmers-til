@@ -5,7 +5,7 @@ export interface ITask {
     taskOwner: string;
 }
 
-export interface IlogItem {
+export interface ILogItem {
     logId: string;
     logAuthor: string;
     logMessage: string;
