@@ -60,3 +60,40 @@ export const buttons = style({
     marginTop: 'auto',
     paddingLeft: vars.spacing.big2,
 })
+
+export const deleteBoardButton = style({
+    border: "none",
+    borderRadius: 5,
+    width: "max-content",
+    marginTop: 'auto',
+    marginLeft: 'auto',
+    marginBottom: 30,
+    fontSize: vars.fontSizing.T4,
+    padding: vars.spacing.big2,
+    cursor: 'pointer',
+    backgroundColor: vars.color.mainFaded,
+    opacity: 0.6,
+    minWidth: 150,
+    ":hover": {
+        opacity: 0.8
+    }
+})
+
+export const loggerButton = style({
+    border: "none",
+    borderRadius: 5,
+    width: "max-content",
+    marginTop: 'auto',
+    marginLeft: '15px',
+    marginRight: '15px',
+    marginBottom: '30px',
+    fontSize: vars.fontSizing.T4,
+    padding: vars.spacing.big2,
+    cursor: 'pointer',
+    backgroundColor: vars.color.mainFaded,
+    minWidth: 150,
+    opacity: 0.6,
+    ":hover": {
+        opacity: 0.8
+    }
+})
