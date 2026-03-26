@@ -7,6 +7,7 @@ import { deleteList, setModalActive } from "../../store/slices/boardsSlice";
 import { addLog } from "../../store/slices/loggerSlice";
 import { setModalData } from "../../store/slices/modalSlice";
 import { deleteButton, header, listWrapper, name } from "./List.css";
+import { Droppable } from "@hello-pangea/dnd";
 
 type TListProps = {
     list: IList;
@@ -19,7 +20,6 @@ const List = ({ list, boardId }: TListProps) => {
     const handleTaskChange = (
         boardId: string,
         listId: string,
-        taskId: string,
         task: ITask
     ) => {
         dispatch(
@@ -44,18 +44,23 @@ const List = ({ list, boardId }: TListProps) => {
         );
     }
     return (
-        <div className={listWrapper}>
-            <div className={header}>
-                <div className={name}>
-                    {list.listName}
-                </div>
+        <Droppable droppableId={list.listId}>
+            {(provided) => (
+                <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className={listWrapper}>
+                    <div className={header}>
+                        <div className={name}>
+                            {list.listName}
+                        </div>
                 <GrSubtract
                     className={deleteButton}
                     onClick={() => handleListDelete(list.listId)} />
             </div>
             {list.tasks.map((task, index) => (
                 <div
-                    onClick={() => handleTaskChange(boardId, list.listId, task.taskId, task)}
+                    onClick={() => handleTaskChange(boardId, list.listId, task)}
                     key={task.taskId}>
                     <Task
                         taskName={task.taskName}
@@ -66,8 +71,11 @@ const List = ({ list, boardId }: TListProps) => {
                     />
                 </div>
             ))}
+            {provided.placeholder}
             <ActionButton listId={list.listId} boardId={boardId} />
         </div>
+            )}
+        </Droppable>
     )
 }
 export default List

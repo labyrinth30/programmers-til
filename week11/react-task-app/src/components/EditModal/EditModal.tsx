@@ -1,9 +1,9 @@
 import { FiX } from "react-icons/fi";
 import { useTypedDispatch, useTypedSelector } from "../../hooks/redux";
 import { useState } from "react";
-import { setModalActive, updateTask } from "../../store/slices/boardsSlice";
+import { deleteTask, setModalActive, updateTask } from "../../store/slices/boardsSlice";
 import { addLog } from "../../store/slices/loggerSlice";
-import { buttons } from "../../App.css";
+import { buttons } from "../../App.css.ts";
 import { closeButton, deleteButton, header, input, modalWindow, title, updateButton, warpper } from "./EditModal.css";
 
 const EditModal = () => {
@@ -123,7 +123,3 @@ const EditModal = () => {
     )
 }
 export default EditModal
-function deleteTask(arg0: { boardId: string; listId: string; taskId: string; }): any {
-    throw new Error("Function not implemented.");
-}
-

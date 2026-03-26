@@ -1,7 +1,7 @@
 // wrapper, modalWindow, header, closeButton, title, body
 
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../App.css";
+import { vars } from "../../App.css.ts";
 
 export const wrapper = style({
     width: '100vw',

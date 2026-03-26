@@ -42,6 +42,15 @@ type TDeleteTaskAction = {
     taskId: string;
 }
 
+type TSortAction = {
+    boardIndex: number;
+    droppableIdStart: string;
+    droppableIdEnd: string;
+    droppableIndexStart: number;
+    droppableIndexEnd: number;
+    draggableId: string;
+}
+
 const initialState: TBoardsState = {
     modalActive: false,
     boardArray: [
@@ -186,8 +195,32 @@ const boardsSlice = createSlice({
                     : board
             )
         },
+        sort(state, { payload }: PayloadAction<TSortAction>) {
+            // same list
+            if (payload.droppableIdStart === payload.droppableIdEnd) {
+                const list = state.boardArray[payload.boardIndex].lists.find(
+                    list => list.listId === payload.droppableIdStart
+                )
+                // 변경시키는 아이템을 배열에서 지워주고, 변경시키는 아이템을 반환함
+                const card = list?.tasks.splice(payload.droppableIndexStart, 1)[0];
+                // 변경시키는 아이템을 원하는 인덱스에 넣어줌
+                list?.tasks.splice(payload.droppableIndexEnd, 0, card!);
+            }
+
+            // other list
+            if (payload.droppableIdStart !== payload.droppableIdEnd) {
+                const startList = state.boardArray[payload.boardIndex].lists.find(
+                    list => list.listId === payload.droppableIdStart
+                )
+                const endList = state.boardArray[payload.boardIndex].lists.find(
+                    list => list.listId === payload.droppableIdEnd
+                )
+                const card = startList?.tasks.splice(payload.droppableIndexStart, 1)[0];
+                endList?.tasks.splice(payload.droppableIndexEnd, 0, card!);
+            }
+        }
     }
 })
 
-export const { addBoard, deleteBoard, deleteList, setModalActive, addList, addTask, updateTask } = boardsSlice.actions;
+export const { addBoard, deleteBoard, deleteList, setModalActive, addList, addTask, updateTask, deleteTask, sort } = boardsSlice.actions;
 export const boardsReducer = boardsSlice.reducer;

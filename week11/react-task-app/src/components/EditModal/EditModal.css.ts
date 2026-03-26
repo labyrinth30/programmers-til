@@ -2,7 +2,7 @@
 // content, inputContainer, input, buttonContainer, button
 
 import { style } from '@vanilla-extract/css';
-import { vars } from '../../App.css';
+import { vars } from '../../App.css.ts';
 
 export const warpper = style({
     width: '100vw',

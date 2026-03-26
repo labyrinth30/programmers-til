@@ -1,10 +1,10 @@
 import type { FC } from "react";
 import { BsFillPersonFill } from "react-icons/bs";
 import { author, date, logItemWrap, message } from "./LogItem.css";
-import type { ILog } from "../../../store/slices/loggerSlice";
+import type { ILogItem } from "../../../types";
 
 type TLogItemProps = {
-    logItem: ILog
+    logItem: ILogItem
 }
 
 const LogItem: FC<TLogItemProps> = ({ logItem }: TLogItemProps) => {

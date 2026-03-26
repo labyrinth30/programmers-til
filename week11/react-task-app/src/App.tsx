@@ -5,8 +5,11 @@ import ListContainer from './components/ListsContainer/ListContainer.tsx';
 import { useTypedDispatch, useTypedSelector } from './hooks/redux';
 import EditModal from './components/EditModal/EditModal.tsx';
 import LoggerModal from './components/LoggerModal/LoggerModal.tsx';
-import { deleteBoard } from './store/slices/boardsSlice.ts';
+import { deleteBoard, sort } from './store/slices/boardsSlice.ts';
 import { addLog } from './store/slices/loggerSlice.ts';
+import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
+import { v4 } from 'uuid';
+
 
 function App() {
   const dispatch = useTypedDispatch();
@@ -45,6 +48,34 @@ function App() {
 
   }
 
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    const sourceList = lists.filter(list => list.listId === source.droppableId)[0];
+
+    dispatch(
+      sort({
+        boardIndex: boards.findIndex(board => board.boardId === activeBoardId),
+        droppableIdStart: source.droppableId,
+        droppableIdEnd: destination.droppableId,
+        droppableIndexStart: source.index,
+        droppableIndexEnd: destination.index,
+        draggableId,
+      })
+    )
+
+    dispatch(
+      addLog({
+        logId: v4(),
+        logAuthor: "User",
+        logMessage: `${sourceList.tasks.filter(task => task.taskId === draggableId)[0].taskName} 작업이 ${destination.droppableId}로 이동됨`,
+        logTimestamp: new Date().toISOString(),
+      })
+    )
+  }
+
   return (
     <div className={appContainer}>
       {isLoggerOpen ? <LoggerModal setIsLoggerOpen={setIsLoggerOpen} /> : null}
@@ -54,7 +85,9 @@ function App() {
         setActiveBoardId={setActiveBoardId}
       />
       <div className={board}>
-        <ListContainer lists={lists} boardId={activeBoardId} />
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <ListContainer lists={lists} boardId={activeBoardId} />
+        </DragDropContext>
       </div>
       <div className={buttons}>
         <button className={deleteBoardButton} onClick={handleDeleteboard}>
