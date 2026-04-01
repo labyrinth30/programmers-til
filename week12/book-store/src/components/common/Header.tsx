@@ -1,6 +1,8 @@
 import { styled } from "styled-components"
+import { Link } from "react-router-dom"
 import logo from "../../assets/images/logo.png"
 import { FaSignInAlt, FaRegUser } from "react-icons/fa"
+import { useCategory } from "../../hooks/useCategory"
 
 // 전체, 동화, 소설 사회 null부터 2까지
 const CATEGORY = [
@@ -11,18 +13,22 @@ const CATEGORY = [
 ]
 
 function Header() {
+    const { category } = useCategory();
+
     return (
         <HeaderStyle>
             <h1 className="logo">
-                <img src={logo} alt="book store" />
+                <Link to="/">
+                    <img src={logo} alt="book store" />
+                </Link>
             </h1>
             <nav className="category">
                 <ul>
                     {CATEGORY.map((item) => (
                         <li key={item.id}>
-                            <a href={item.id === null ? "/books" : `/books?category_id=${item.id}`}>
+                            <Link to={item.id === null ? "/books" : `/books?category_id=${item.id}`}>
                                 {item.name}
-                            </a>
+                            </Link>
                         </li>
                     ))}
                 </ul>
